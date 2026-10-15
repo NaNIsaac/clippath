@@ -82,5 +82,8 @@ Manual, one shot:
 
 3. `Ctrl+V` in your AI terminal.
 
-Files are saved in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the same image
-is saved once. Nothing is deleted automatically and nothing is sent anywhere.
+If your screenshot tool already saved the file (Snipping Tool, `Win+PrtScn` →
+`Pictures\Screenshots`), clippath copies that file's path instead of making a second
+copy. Other images are saved in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the
+same image is saved once; `clippath clean` only touches this folder. Nothing is sent
+anywhere.

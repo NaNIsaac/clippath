@@ -7,6 +7,7 @@ import os
 import struct
 import sys
 import time
+import uuid
 import zlib
 from ctypes import wintypes as w
 
@@ -44,6 +45,7 @@ fn(u32, "PostMessageW", w.BOOL, w.HWND, w.UINT, w.WPARAM, w.LPARAM)
 fn(u32, "DestroyWindow", w.BOOL, w.HWND)
 fn(u32, "AddClipboardFormatListener", w.BOOL, w.HWND)
 fn(u32, "SetTimer", ctypes.c_size_t, w.HWND, ctypes.c_size_t, w.UINT, H)
+fn(u32, "KillTimer", w.BOOL, w.HWND, ctypes.c_size_t)
 fn(u32, "GetMessageW", w.BOOL, ctypes.POINTER(w.MSG), w.HWND, w.UINT, w.UINT)
 fn(u32, "TranslateMessage", w.BOOL, ctypes.POINTER(w.MSG))
 fn(u32, "DispatchMessageW", ctypes.c_ssize_t, ctypes.POINTER(w.MSG))
@@ -76,12 +78,15 @@ class NOTIFYICONDATAW(ctypes.Structure):
                 ("guidItem", ctypes.c_byte * 16), ("hBalloonIcon", H)]
 
 
+ole32 = ctypes.WinDLL("ole32")
+fn(ole32, "CoTaskMemFree", None, H)
+fn(s32, "SHGetKnownFolderPath", ctypes.c_long, ctypes.c_char_p, w.DWORD, H, ctypes.POINTER(H))
 fn(u32, "RegisterClassW", w.ATOM, ctypes.POINTER(WNDCLASSW))
 fn(s32, "Shell_NotifyIconW", w.BOOL, w.DWORD, ctypes.POINTER(NOTIFYICONDATAW))
 
 CF_DIB, CF_UNICODETEXT, GMEM_MOVEABLE = 8, 13, 2
 CF_PNG = u32.RegisterClipboardFormatW("PNG")
-WM_DESTROY, WM_CLOSE, WM_CLIPBOARDUPDATE, WM_TRAY = 0x2, 0x10, 0x31D, 0x8001
+WM_DESTROY, WM_CLOSE, WM_TIMER, WM_CLIPBOARDUPDATE, WM_TRAY = 0x2, 0x10, 0x113, 0x31D, 0x8001
 WM_LBUTTONUP, WM_RBUTTONUP = 0x202, 0x205
 ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clippath.ico")
 CLASS = "clippath"
@@ -162,21 +167,55 @@ def folder():
     return d
 
 
+def screenshots_dir():
+    p = ctypes.c_void_p()
+    folder_id = ctypes.create_string_buffer(uuid.UUID("b7bede81-df94-4682-a7d8-57a52620b86f").bytes_le)
+    if s32.SHGetKnownFolderPath(folder_id, 0, None, ctypes.byref(p)):  # FOLDERID_Screenshots
+        return None
+    try:
+        return ctypes.wstring_at(p.value)
+    finally:
+        ole32.CoTaskMemFree(p)
+
+
+def find_screenshot(png):
+    """File the screenshot tool just saved for this image (Snipping Tool, Win+PrtScn), else None."""
+    d = screenshots_dir()
+    if not d or not os.path.isdir(d):
+        return None
+    # ponytail: newest PNG with the same width/height within 10s; a content match if this ever misfires
+    for _ in range(20):  # the tool may write the file just after setting the clipboard
+        files = sorted(os.scandir(d), key=lambda e: e.stat().st_mtime, reverse=True)[:3]
+        for e in files:
+            if e.name.lower().endswith(".png") and time.time() - e.stat().st_mtime < 10:
+                with contextlib.suppress(OSError), open(e.path, "rb") as f:
+                    if f.read(24)[16:24] == png[16:24]:  # IHDR width + height
+                        return e.path
+        time.sleep(0.05)
+    return None
+
+
 def capture(wsl):
-    """Clipboard image -> saved PNG; path + image back on the clipboard. None if no image."""
+    """Clipboard image -> PNG file path + image back on the clipboard. None if no image."""
     with clipboard():
         png, dib = get(CF_PNG), get(CF_DIB)
-        if png and b"IEND" in png:
-            png = png[:png.rfind(b"IEND") + 8]  # GlobalSize may pad past the end
-        elif dib:
-            png = dib_to_png(dib)
-        else:
-            return None
+        seq = u32.GetClipboardSequenceNumber()
+    if png and b"IEND" in png:
+        png = png[:png.rfind(b"IEND") + 8]  # GlobalSize may pad past the end
+    elif dib:
+        png = dib_to_png(dib)
+    else:
+        return None
+    path = find_screenshot(png)  # reuse the tool's own file instead of a second copy
+    if not path:
         path = os.path.join(folder(), hashlib.sha256(png).hexdigest()[:16] + ".png")
         if not os.path.exists(path):  # same image -> same file
             with open(path, "wb") as f:
                 f.write(png)
-        out = to_wsl(path) if wsl else path
+    out = to_wsl(path) if wsl else path
+    with clipboard():
+        if u32.GetClipboardSequenceNumber() != seq:  # user copied something else meanwhile
+            return None
         # SetClipboardData needs ownership, so empty and re-register the image next to the path
         u32.EmptyClipboard()
         put(CF_UNICODETEXT, (out + "\0").encode("utf-16-le"))
@@ -190,7 +229,7 @@ def copy(wsl):
     r = capture(wsl)
     if not r:
         sys.exit("clippath: no image on clipboard")
-    print(f"Saved: {r[0]}\nCopied: {r[1]}")
+    print(f"File:   {r[0]}\nCopied: {r[1]}")
 
 
 def watch(wsl):
@@ -230,7 +269,10 @@ def watch(wsl):
 
     @WNDPROC
     def proc(hwnd, msg, wp, lp):
-        if msg == WM_CLIPBOARDUPDATE:
+        if msg == WM_CLIPBOARDUPDATE:  # let the source app finish writing before we open it
+            u32.SetTimer(hwnd, 2, 150, None)
+        elif msg == WM_TIMER and wp == 2:
+            u32.KillTimer(hwnd, 2)
             on_clipboard()
         elif msg == WM_TRAY and lp in (WM_LBUTTONUP, WM_RBUTTONUP):
             menu(hwnd)
