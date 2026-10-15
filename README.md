@@ -76,8 +76,8 @@ Manual, one shot:
 2. Run in PowerShell:
 
    ```powershell
-   clippath copy          # copies C:\Users\...\clippath\<hash>.png
-   clippath copy --wsl    # copies /mnt/c/Users/.../clippath/<hash>.png
+   clippath copy          # copies "C:\Users\...\clippath\<hash>.png"
+   clippath copy --wsl    # copies "/mnt/c/Users/.../clippath/<hash>.png"
    ```
 
 3. `Ctrl+V` in your AI terminal.

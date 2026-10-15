@@ -212,7 +212,7 @@ def capture(wsl):
         if not os.path.exists(path):  # same image -> same file
             with open(path, "wb") as f:
                 f.write(png)
-    out = to_wsl(path) if wsl else path
+    out = f'"{to_wsl(path) if wsl else path}"'  # quoted: paths may contain spaces
     with clipboard():
         if u32.GetClipboardSequenceNumber() != seq:  # user copied something else meanwhile
             return None
