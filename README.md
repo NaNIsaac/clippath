@@ -2,29 +2,33 @@
 
 # clippath
 
-Screenshot once. Paste where you need it.
+**Screenshot once. Paste where you need it.**
+
+[한국어](README.ko.md)
 
 Turns the image on your Windows clipboard into a PNG file and puts its path on the
 clipboard, so you can paste screenshots into terminal AI agents (Claude Code, Codex, ...)
 on Windows or WSL. The image stays on the clipboard too, so pasting into Paint or a
 messenger still gives you the image. Python stdlib only, no dependencies.
 
+![Screenshot, clippath adds the file path to the clipboard, Ctrl+V gives the path in a terminal and the image in other apps](assets/how-it-works.svg)
+
 ## Install
 
 Recommended (puts `clippath` on PATH for you):
 
 ```powershell
-uv tool install .
+uv tool install git+https://github.com/NaNIsaac/clippath
 uv tool update-shell  # first time only, then open a new terminal
 ```
 
 No uv yet? `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
-(`pipx install .` + `pipx ensurepath` also works.)
+(`pipx install git+https://github.com/NaNIsaac/clippath` + `pipx ensurepath` also works.)
 
 With plain pip:
 
 ```powershell
-pip install .
+pip install git+https://github.com/NaNIsaac/clippath
 ```
 
 If pip warns `clippath.exe is installed in '...\Scripts' which is not on PATH`,
@@ -51,7 +55,13 @@ clippath start --wsl    # same, but copy /mnt/c/... paths
 ```
 
 Then just screenshot (`Win+Shift+S`, PrintScreen, any tool) and `Ctrl+V` in your
-AI terminal: the path is pasted. Paint or a messenger still gets the image.
+AI terminal:
+
+```text
+> what's wrong with this layout? "C:\Users\me\Pictures\Screenshots\Screenshot 2026-10-16 091500.png"
+```
+
+The path is quoted, so spaces are safe. Paint or a messenger still gets the image.
 Normal text copies are left alone.
 
 While it runs, the clippath icon sits in the tray (click it: open folder, quit) and
@@ -70,17 +80,7 @@ Task Manager lists it as `clippath.exe`.
 
 `clippath -h`, `clippath <command> -h`, `clippath --version`.
 
-Manual, one shot:
-
-1. Take a screenshot to the clipboard.
-2. Run in PowerShell:
-
-   ```powershell
-   clippath copy          # copies "C:\Users\...\clippath\<hash>.png"
-   clippath copy --wsl    # copies "/mnt/c/Users/.../clippath/<hash>.png"
-   ```
-
-3. `Ctrl+V` in your AI terminal.
+## Where files go
 
 If your screenshot tool already saved the file (Snipping Tool, `Win+PrtScn` →
 `Pictures\Screenshots`), clippath copies that file's path instead of making a second

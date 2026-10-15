@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="320" viewBox="0 0 900 320" font-family="Segoe UI, system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#64748B"/>
+    </marker>
+    <symbol id="pic" viewBox="0 0 60 40">
+      <rect width="60" height="40" rx="4" fill="#DBEAFE"/>
+      <circle cx="44" cy="12" r="5" fill="#F59E0B"/>
+      <path d="M0 40L20 16L34 32L42 24L60 40z" fill="#2563EB"/>
+    </symbol>
+  </defs>
+  <rect x="1" y="1" width="898" height="318" rx="16" fill="#F8FAFC" stroke="#E2E8F0"/>
+
+  <!-- 1. screenshot -->
+  <text x="30" y="46" font-size="17" font-weight="600" fill="#0F172A">1. Screenshot</text>
+  <rect x="30" y="70" width="170" height="160" rx="10" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="44" y="84" width="142" height="12" rx="3" fill="#E2E8F0"/>
+  <rect x="44" y="104" width="100" height="8" rx="3" fill="#E2E8F0"/>
+  <rect x="58" y="126" width="114" height="76" fill="#DBEAFE" fill-opacity=".5" stroke="#2563EB" stroke-width="2" stroke-dasharray="6 4"/>
+  <use href="#pic" x="85" y="144" width="60" height="40"/>
+  <g font-size="13" fill="#334155" text-anchor="middle">
+    <rect x="34" y="248" width="46" height="28" rx="6" fill="#FFF" stroke="#94A3B8"/><text x="57" y="267">Win</text>
+    <text x="90" y="267">+</text>
+    <rect x="100" y="248" width="54" height="28" rx="6" fill="#FFF" stroke="#94A3B8"/><text x="127" y="267">Shift</text>
+    <text x="164" y="267">+</text>
+    <rect x="174" y="248" width="28" height="28" rx="6" fill="#FFF" stroke="#94A3B8"/><text x="188" y="267">S</text>
+  </g>
+
+  <path d="M210 150H250" stroke="#64748B" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- 2. clippath -->
+  <text x="262" y="46" font-size="17" font-weight="600" fill="#0F172A">2. clippath adds the path</text>
+  <rect x="262" y="70" width="270" height="200" rx="10" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <g transform="translate(278 84) scale(.125)">
+    <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#g)"/>
+    <rect x="60" y="52" width="136" height="168" rx="18" fill="#FFF"/>
+    <rect x="94" y="34" width="68" height="42" rx="14" fill="#1E3A8A"/>
+    <path d="M110 192L146 104" stroke="#2563EB" stroke-width="24" stroke-linecap="round"/>
+  </g>
+  <text x="318" y="106" font-size="15" font-weight="600" fill="#0F172A">Clipboard</text>
+  <rect x="278" y="126" width="238" height="58" rx="8" fill="#EFF6FF" stroke="#2563EB"/>
+  <text x="290" y="148" font-size="12" font-weight="600" fill="#2563EB">+ text (added)</text>
+  <text x="290" y="171" font-size="13" fill="#0F172A" font-family="Cascadia Mono, Consolas, monospace">"C:\…\Screenshots\shot.png"</text>
+  <rect x="278" y="196" width="238" height="56" rx="8" fill="#F1F5F9"/>
+  <use href="#pic" x="290" y="205" width="54" height="38"/>
+  <text x="356" y="229" font-size="14" fill="#334155">image (kept)</text>
+
+  <path d="M524 155C560 155 560 118 590 118" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M524 224C560 224 560 232 590 232" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#a)"/>
+  <text x="566" y="178" font-size="12" font-weight="600" fill="#64748B" text-anchor="middle">Ctrl+V</text>
+
+  <!-- 3. paste -->
+  <text x="598" y="46" font-size="17" font-weight="600" fill="#0F172A">3. Paste anywhere</text>
+  <rect x="598" y="70" width="272" height="96" rx="10" fill="#0F172A"/>
+  <circle cx="614" cy="86" r="4" fill="#F87171"/><circle cx="628" cy="86" r="4" fill="#FBBF24"/><circle cx="642" cy="86" r="4" fill="#34D399"/>
+  <text x="858" y="90" font-size="12" fill="#94A3B8" text-anchor="end">Terminal · AI agent</text>
+  <g font-family="Cascadia Mono, Consolas, monospace" font-size="13">
+    <text x="612" y="120" fill="#94A3B8">&gt; what's wrong here?</text>
+    <text x="612" y="146" fill="#34D399">"C:\…\Screenshots\shot.png"</text>
+  </g>
+  <rect x="598" y="184" width="272" height="96" rx="10" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="858" y="204" font-size="12" fill="#64748B" text-anchor="end">Paint · Slack · KakaoTalk</text>
+  <use href="#pic" x="612" y="212" width="84" height="56"/>
+  <text x="710" y="246" font-size="14" fill="#334155">gets the image</text>
+</svg>
