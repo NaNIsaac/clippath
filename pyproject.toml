@@ -1,0 +1,18 @@
+[project]
+name = "clippath"
+version = "0.4.0"
+description = "Screenshot once. Paste where you need it. Clipboard image -> PNG -> Windows/WSL path."
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+clippath = "clippath:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["clippath"]
+package-data = { clippath = ["*.ico"] }
