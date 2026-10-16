@@ -233,6 +233,8 @@ def copy(wsl):
 
 
 def watch(wsl):
+    if sys.stderr is None:  # pythonw has no console; without this, a crash leaves no trace
+        sys.stdout = sys.stderr = open(os.path.join(folder(), "watch.log"), "a", encoding="utf-8", buffering=1)
     mutex = k32.CreateMutexW(None, False, "clippath-watch")  # one watcher per user session
     if not mutex or ctypes.get_last_error() == 183:  # ERROR_ALREADY_EXISTS
         sys.exit("clippath: already watching")
