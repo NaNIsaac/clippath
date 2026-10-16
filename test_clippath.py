@@ -1,7 +1,7 @@
 import struct
 import zlib
 
-from clippath import dib_to_png, to_wsl
+from clippath import dib_to_png, takes_path, to_wsl
 
 
 def idat(png):
@@ -26,6 +26,15 @@ def test_dib_bitfields_32bpp_top_down():
 
 def test_to_wsl():
     assert to_wsl(r"C:\Users\me\shot.png") == "/mnt/c/Users/me/shot.png"
+
+
+
+def test_takes_path():
+    assert takes_path("CASCADIA_HOSTING_WINDOW_CLASS", "WindowsTerminal.exe")
+    assert takes_path("ConsoleWindowClass", "someshell.exe")
+    assert takes_path("Notepad", "Notepad.exe")
+    assert not takes_path("Chrome_WidgetWin_1", "chrome.exe")
+    assert not takes_path("EVA_Window_Dblclk", "KakaoTalk.exe")
 
 
 if __name__ == "__main__":

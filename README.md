@@ -63,7 +63,8 @@ AI terminal:
 > what's wrong with this layout? "C:\Users\me\Pictures\Screenshots\Screenshot 2026-10-16 091500.png"
 ```
 
-The path is quoted, so spaces are safe. Paint or a messenger still gets the image.
+The path is quoted, so spaces are safe. Only terminals, code editors, Notepad and
+Explorer get the path; browsers (ChatGPT, ...), messengers and Paint get just the image.
 Normal text copies are left alone.
 
 It is a plain path, so any command can use it:

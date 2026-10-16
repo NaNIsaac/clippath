@@ -58,6 +58,12 @@ fn(u32, "DestroyMenu", w.BOOL, H)
 fn(u32, "SetForegroundWindow", w.BOOL, w.HWND)
 fn(u32, "GetCursorPos", w.BOOL, ctypes.POINTER(w.POINT))
 fn(k32, "GetModuleHandleW", H, w.LPCWSTR)
+# paste target
+fn(u32, "GetForegroundWindow", w.HWND)
+fn(u32, "GetClassNameW", ctypes.c_int, w.HWND, w.LPWSTR, ctypes.c_int)
+fn(u32, "GetWindowThreadProcessId", w.DWORD, w.HWND, ctypes.POINTER(w.DWORD))
+fn(k32, "OpenProcess", H, w.DWORD, w.BOOL, w.DWORD)
+fn(k32, "QueryFullProcessImageNameW", w.BOOL, H, w.DWORD, w.LPWSTR, ctypes.POINTER(w.DWORD))
 # exe icon
 fn(k32, "BeginUpdateResourceW", H, w.LPCWSTR, w.BOOL)
 fn(k32, "UpdateResourceW", w.BOOL, H, H, H, w.WORD, ctypes.c_char_p, w.DWORD)
@@ -87,15 +93,15 @@ fn(s32, "Shell_NotifyIconW", w.BOOL, w.DWORD, ctypes.POINTER(NOTIFYICONDATAW))
 CF_DIB, CF_UNICODETEXT, GMEM_MOVEABLE = 8, 13, 2
 CF_PNG = u32.RegisterClipboardFormatW("PNG")
 WM_DESTROY, WM_CLOSE, WM_TIMER, WM_CLIPBOARDUPDATE, WM_TRAY = 0x2, 0x10, 0x113, 0x31D, 0x8001
-WM_LBUTTONUP, WM_RBUTTONUP = 0x202, 0x205
+WM_LBUTTONUP, WM_RBUTTONUP, WM_RENDERFORMAT = 0x202, 0x205, 0x305
 ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clippath.ico")
 CLASS = "clippath"
 
 
 @contextlib.contextmanager
-def clipboard():
+def clipboard(owner=None):
     for _ in range(50):  # another app may hold it briefly
-        if u32.OpenClipboard(None):
+        if u32.OpenClipboard(owner):
             break
         time.sleep(0.02)
     else:
@@ -195,8 +201,40 @@ def find_screenshot(png):
     return None
 
 
-def capture(wsl):
-    """Clipboard image -> PNG file path + image back on the clipboard. None if no image."""
+# Apps that can't take an image get the path; everything else (browsers, messengers) only the image.
+PATH_CLASSES = {"ConsoleWindowClass", "CASCADIA_HOSTING_WINDOW_CLASS", "PseudoConsoleWindow"}
+PATH_APPS = {
+    "windowsterminal.exe", "openconsole.exe", "cmd.exe", "powershell.exe", "pwsh.exe", "wsl.exe",
+    "wezterm-gui.exe", "alacritty.exe", "mintty.exe", "tabby.exe", "hyper.exe", "warp.exe",
+    "conemu.exe", "conemu64.exe", "code.exe", "cursor.exe", "windsurf.exe", "zed.exe",
+    "notepad.exe", "notepad++.exe", "sublime_text.exe", "explorer.exe",
+}
+
+
+def takes_path(cls, exe):
+    return cls in PATH_CLASSES or exe.lower() in PATH_APPS
+
+
+def foreground():
+    """(window class, exe name) of the window being pasted into."""
+    hwnd = u32.GetForegroundWindow()
+    cls = ctypes.create_unicode_buffer(256)
+    u32.GetClassNameW(hwnd, cls, 256)
+    pid = w.DWORD()
+    u32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    exe, n = ctypes.create_unicode_buffer(1024), w.DWORD(1024)
+    h = k32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+    if h:
+        k32.QueryFullProcessImageNameW(h, 0, exe, ctypes.byref(n))
+        k32.CloseHandle(h)
+    return cls.value, os.path.basename(exe.value)
+
+
+def capture(wsl, owner=None):
+    """Clipboard image -> PNG file path + image back on the clipboard. None if no image.
+
+    With an owner window the path is delay-rendered: the owner gets WM_RENDERFORMAT
+    on paste and decides then, from the paste target, whether to hand it out."""
     with clipboard():
         png, dib = get(CF_PNG), get(CF_DIB)
         seq = u32.GetClipboardSequenceNumber()
@@ -213,12 +251,15 @@ def capture(wsl):
             with open(path, "wb") as f:
                 f.write(png)
     out = f'"{to_wsl(path) if wsl else path}"'  # quoted: paths may contain spaces
-    with clipboard():
+    with clipboard(owner):
         if u32.GetClipboardSequenceNumber() != seq:  # user copied something else meanwhile
             return None
         # SetClipboardData needs ownership, so empty and re-register the image next to the path
         u32.EmptyClipboard()
-        put(CF_UNICODETEXT, (out + "\0").encode("utf-16-le"))
+        if owner:
+            u32.SetClipboardData(CF_UNICODETEXT, None)
+        else:
+            put(CF_UNICODETEXT, (out + "\0").encode("utf-16-le"))
         put(CF_PNG, png)
         if dib:
             put(CF_DIB, dib)
@@ -241,13 +282,17 @@ def watch(wsl):
     tip = f"clippath - {'WSL' if wsl else 'Windows'} paths"
     print(f"Watching clipboard for images ({tip[11:]}). Ctrl+C to stop.")
 
-    def on_clipboard():
+    last = ""  # path waiting to be delay-rendered
+
+    def on_clipboard(hwnd):
+        nonlocal last
         # text present = already a path (ours) or a normal copy; leave it alone
         if u32.IsClipboardFormatAvailable(CF_DIB) and not u32.IsClipboardFormatAvailable(CF_UNICODETEXT):
             try:
-                r = capture(wsl)
+                r = capture(wsl, hwnd)
                 if r:
-                    print(f"Copied: {r[1]}")
+                    last = r[1]
+                    print(f"Copied: {last}")
             except (OSError, ValueError) as e:
                 print(f"clippath: {e}")
 
@@ -275,7 +320,12 @@ def watch(wsl):
             u32.SetTimer(hwnd, 2, 150, None)
         elif msg == WM_TIMER and wp == 2:
             u32.KillTimer(hwnd, 2)
-            on_clipboard()
+            on_clipboard(hwnd)
+        elif msg == WM_RENDERFORMAT:  # the pasting app holds the clipboard open
+            # ponytail: once rendered the path stays until the next copy, so a later paste into a
+            # browser gets text too; re-arm by retaking the clipboard if that bites
+            if wp == CF_UNICODETEXT and takes_path(*foreground()):
+                put(CF_UNICODETEXT, (last + "\0").encode("utf-16-le"))
         elif msg == WM_TRAY and lp in (WM_LBUTTONUP, WM_RBUTTONUP):
             menu(hwnd)
         elif msg == taskbar_created:  # explorer restarted, icon is gone
