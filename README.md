@@ -11,6 +11,8 @@ clipboard, so you can paste screenshots into terminal AI agents (Claude Code, Co
 on Windows or WSL. The image stays on the clipboard too, so pasting into Paint or a
 messenger still gives you the image. Python stdlib only, no dependencies.
 
+![Screenshot a pricing card, paste it into Claude Code, get the card back as HTML](assets/claude-code.gif)
+
 ![Screenshot, clippath adds the file path to the clipboard, Ctrl+V gives the path in a terminal and the image in other apps](assets/how-it-works.svg)
 
 ## Install
@@ -63,6 +65,10 @@ AI terminal:
 
 The path is quoted, so spaces are safe. Paint or a messenger still gets the image.
 Normal text copies are left alone.
+
+It is a plain path, so any command can use it:
+
+![Screenshot, then Ctrl+V in PowerShell pastes the quoted file path into a cp command](assets/terminal.gif)
 
 While it runs, the clippath icon sits in the tray (click it: open folder, quit) and
 Task Manager lists it as `clippath.exe`.
