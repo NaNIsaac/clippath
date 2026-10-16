@@ -60,6 +60,7 @@ fn(u32, "GetCursorPos", w.BOOL, ctypes.POINTER(w.POINT))
 fn(k32, "GetModuleHandleW", H, w.LPCWSTR)
 # paste target
 fn(u32, "GetForegroundWindow", w.HWND)
+fn(u32, "GetClipboardOwner", w.HWND)
 fn(u32, "GetClassNameW", ctypes.c_int, w.HWND, w.LPWSTR, ctypes.c_int)
 fn(u32, "GetWindowThreadProcessId", w.DWORD, w.HWND, ctypes.POINTER(w.DWORD))
 fn(k32, "OpenProcess", H, w.DWORD, w.BOOL, w.DWORD)
@@ -92,6 +93,7 @@ fn(s32, "Shell_NotifyIconW", w.BOOL, w.DWORD, ctypes.POINTER(NOTIFYICONDATAW))
 
 CF_DIB, CF_UNICODETEXT, GMEM_MOVEABLE = 8, 13, 2
 CF_PNG = u32.RegisterClipboardFormatW("PNG")
+CF_NO_HISTORY = u32.RegisterClipboardFormatW("CanIncludeInClipboardHistory")  # DWORD 0 = skip
 WM_DESTROY, WM_CLOSE, WM_TIMER, WM_CLIPBOARDUPDATE, WM_TRAY = 0x2, 0x10, 0x113, 0x31D, 0x8001
 WM_LBUTTONUP, WM_RBUTTONUP, WM_RENDERFORMAT = 0x202, 0x205, 0x305
 ICON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clippath.ico")
@@ -254,16 +256,22 @@ def capture(wsl, owner=None):
     with clipboard(owner):
         if u32.GetClipboardSequenceNumber() != seq:  # user copied something else meanwhile
             return None
-        # SetClipboardData needs ownership, so empty and re-register the image next to the path
-        u32.EmptyClipboard()
-        if owner:
-            u32.SetClipboardData(CF_UNICODETEXT, None)
-        else:
-            put(CF_UNICODETEXT, (out + "\0").encode("utf-16-le"))
-        put(CF_PNG, png)
-        if dib:
-            put(CF_DIB, dib)
-    return path, out
+        offer(out, png, dib, owner)
+    return path, out, png, dib
+
+
+def offer(out, png, dib, owner=None, history=True):
+    """Take over the open clipboard: the path next to the image."""
+    u32.EmptyClipboard()  # SetClipboardData needs ownership
+    if owner:
+        u32.SetClipboardData(CF_UNICODETEXT, None)
+    else:
+        put(CF_UNICODETEXT, (out + "\0").encode("utf-16-le"))
+    put(CF_PNG, png)
+    if dib:
+        put(CF_DIB, dib)
+    if not history:  # same image again, keep it out of Win+V
+        put(CF_NO_HISTORY, b"\0\0\0\0")
 
 
 def copy(wsl):
@@ -282,7 +290,7 @@ def watch(wsl):
     tip = f"clippath - {'WSL' if wsl else 'Windows'} paths"
     print(f"Watching clipboard for images ({tip[11:]}). Ctrl+C to stop.")
 
-    last = ""  # path waiting to be delay-rendered
+    last = None  # (path, out, png, dib) of the image on the clipboard
 
     def on_clipboard(hwnd):
         nonlocal last
@@ -291,8 +299,8 @@ def watch(wsl):
             try:
                 r = capture(wsl, hwnd)
                 if r:
-                    last = r[1]
-                    print(f"Copied: {last}")
+                    last = r
+                    print(f"Copied: {r[1]}")
             except (OSError, ValueError) as e:
                 print(f"clippath: {e}")
 
@@ -322,10 +330,18 @@ def watch(wsl):
             u32.KillTimer(hwnd, 2)
             on_clipboard(hwnd)
         elif msg == WM_RENDERFORMAT:  # the pasting app holds the clipboard open
-            # ponytail: once rendered the path stays until the next copy, so a later paste into a
-            # browser gets text too; re-arm by retaking the clipboard if that bites
-            if wp == CF_UNICODETEXT and takes_path(*foreground()):
-                put(CF_UNICODETEXT, (last + "\0").encode("utf-16-le"))
+            if wp == CF_UNICODETEXT and last and takes_path(*foreground()):
+                put(CF_UNICODETEXT, (last[1] + "\0").encode("utf-16-le"))
+                u32.SetTimer(hwnd, 3, 300, None)
+        elif msg == WM_TIMER and wp == 3:
+            # a rendered path would stick and reach the next browser paste; reset to delayed
+            u32.KillTimer(hwnd, 3)
+            if u32.GetClipboardOwner() == hwnd:  # nobody copied since
+                try:
+                    with clipboard(hwnd):
+                        offer(*last[1:], hwnd, history=False)
+                except OSError as e:
+                    print(f"clippath: {e}")
         elif msg == WM_TRAY and lp in (WM_LBUTTONUP, WM_RBUTTONUP):
             menu(hwnd)
         elif msg == taskbar_created:  # explorer restarted, icon is gone
