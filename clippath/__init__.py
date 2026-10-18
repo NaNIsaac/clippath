@@ -186,19 +186,100 @@ def screenshots_dir():
         ole32.CoTaskMemFree(p)
 
 
+# Decoding for find_screenshot. GDI+ ships with Windows, so this stays stdlib-only.
+gdip = ctypes.WinDLL("gdiplus")
+shlwapi = ctypes.WinDLL("shlwapi")
+PixelFormat24bppRGB, ImageLockModeRead = 0x21808, 1
+
+
+class GdiplusStartupInput(ctypes.Structure):
+    _fields_ = [("GdiplusVersion", ctypes.c_uint32), ("DebugEventCallback", H),
+                ("SuppressBackgroundThread", w.BOOL), ("SuppressExternalCodecs", w.BOOL)]
+
+
+class GpRect(ctypes.Structure):
+    _fields_ = [("X", ctypes.c_int), ("Y", ctypes.c_int), ("Width", ctypes.c_int), ("Height", ctypes.c_int)]
+
+
+class BitmapData(ctypes.Structure):
+    _fields_ = [("Width", w.UINT), ("Height", w.UINT), ("Stride", ctypes.c_int),
+                ("PixelFormat", ctypes.c_int), ("Scan0", H), ("Reserved", ctypes.c_size_t)]
+
+
+fn(shlwapi, "SHCreateMemStream", H, ctypes.c_char_p, w.UINT)
+fn(gdip, "GdiplusStartup", ctypes.c_int, ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(GdiplusStartupInput), H)
+fn(gdip, "GdipCreateBitmapFromStream", ctypes.c_int, H, ctypes.POINTER(H))
+fn(gdip, "GdipGetImageWidth", ctypes.c_int, H, ctypes.POINTER(w.UINT))
+fn(gdip, "GdipGetImageHeight", ctypes.c_int, H, ctypes.POINTER(w.UINT))
+fn(gdip, "GdipBitmapLockBits", ctypes.c_int, H, ctypes.POINTER(GpRect), w.UINT, ctypes.c_int,
+   ctypes.POINTER(BitmapData))
+fn(gdip, "GdipBitmapUnlockBits", ctypes.c_int, H, ctypes.POINTER(BitmapData))
+fn(gdip, "GdipDisposeImage", ctypes.c_int, H)
+_gdip_token = None
+
+
+def pixels(png):
+    """RGB rows of an encoded image, or None if GDI+ cannot decode it. Alpha is dropped,
+    as dib_to_png does, so a tool's RGBA file and the clipboard's RGB copy compare equal."""
+    global _gdip_token
+    if _gdip_token is None:
+        token = ctypes.c_size_t()
+        if gdip.GdiplusStartup(ctypes.byref(token), ctypes.byref(GdiplusStartupInput(1)), None):
+            return None
+        _gdip_token = token
+    stream = shlwapi.SHCreateMemStream(png, len(png))
+    if not stream:
+        return None
+    bmp = H()
+    try:
+        if gdip.GdipCreateBitmapFromStream(stream, ctypes.byref(bmp)):
+            return None
+        width, height = w.UINT(), w.UINT()
+        gdip.GdipGetImageWidth(bmp, ctypes.byref(width))
+        gdip.GdipGetImageHeight(bmp, ctypes.byref(height))
+        rect, data = GpRect(0, 0, width.value, height.value), BitmapData()
+        if gdip.GdipBitmapLockBits(bmp, ctypes.byref(rect), ImageLockModeRead, PixelFormat24bppRGB,
+                                   ctypes.byref(data)):
+            return None
+        try:
+            return b"".join(ctypes.string_at(data.Scan0 + y * data.Stride, width.value * 3)
+                            for y in range(height.value))
+        finally:
+            gdip.GdipBitmapUnlockBits(bmp, ctypes.byref(data))
+    finally:
+        if bmp:
+            gdip.GdipDisposeImage(bmp)  # before the stream: the bitmap reads from it
+        release = ctypes.WINFUNCTYPE(ctypes.c_ulong, H)(ctypes.cast(stream, ctypes.POINTER(ctypes.POINTER(H)))[0][2])
+        release(stream)  # IUnknown::Release
+
+
+def same_image(a, b, b_pixels=None):
+    """Same picture, whatever encoder wrote each PNG. `b_pixels` caches pixels(b) across calls."""
+    if a == b:
+        return True
+    if a[16:24] != b[16:24]:  # IHDR width + height
+        return False
+    pa = pixels(a)
+    return pa is not None and pa == (b_pixels if b_pixels is not None else pixels(b))
+
+
 def find_screenshot(png):
     """File the screenshot tool just saved for this image (Snipping Tool, Win+PrtScn), else None."""
     d = screenshots_dir()
     if not d or not os.path.isdir(d):
         return None
-    # ponytail: newest PNG with the same width/height within 10s; a content match if this ever misfires
+    clip_pixels = None
     for _ in range(20):  # the tool may write the file just after setting the clipboard
         files = sorted(os.scandir(d), key=lambda e: e.stat().st_mtime, reverse=True)[:3]
         for e in files:
             if e.name.lower().endswith(".png") and time.time() - e.stat().st_mtime < 10:
                 with contextlib.suppress(OSError), open(e.path, "rb") as f:
-                    if f.read(24)[16:24] == png[16:24]:  # IHDR width + height
-                        return e.path
+                    data = f.read()
+                    if data[16:24] == png[16:24]:
+                        if clip_pixels is None:  # decode the clipboard image once, only when needed
+                            clip_pixels = pixels(png)
+                        if same_image(data, png, clip_pixels):
+                            return e.path
         time.sleep(0.05)
     return None
 

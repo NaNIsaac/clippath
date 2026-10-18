@@ -91,6 +91,6 @@ Task Manager lists it as `clippath.exe`.
 
 If your screenshot tool already saved the file (Snipping Tool, `Win+PrtScn` →
 `Pictures\Screenshots`), clippath copies that file's path instead of making a second
-copy. Other images are saved in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the
-same image is saved once; `clippath clean` only touches this folder. Nothing is sent
+copy, after checking that its pixels match the clipboard image. Other images are saved
+in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the same image is saved once; `clippath clean` only touches this folder. Nothing is sent
 anywhere.
