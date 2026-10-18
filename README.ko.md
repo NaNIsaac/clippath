@@ -9,7 +9,7 @@
 Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로를 클립보드에 넣습니다.
 그래서 Windows나 WSL의 터미널 AI 에이전트(Claude Code, Codex 등)에 스크린샷을 바로
 붙여넣을 수 있습니다. 이미지도 클립보드에 그대로 남아 있어서, 그림판이나 메신저에
-붙여넣으면 이미지가 붙습니다. Python 표준 라이브러리만 씁니다.
+붙여넣으면 이미지가 붙습니다. 작은 Windows 네이티브 프로그램이라 Python이나 런타임이 필요 없습니다.
 
 ![가격 카드를 캡처해 Claude Code에 붙여넣으면 같은 카드를 HTML로 만들어 주는 장면](assets/claude-code.gif)
 
@@ -17,35 +17,26 @@ Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로�
 
 ## 설치
 
-권장 (`clippath` 명령이 PATH에 자동으로 잡힙니다):
+[최신 릴리스](https://github.com/NaNIsaac/clippath/releases/latest)에서 exe 두 개가 든
+`clippath-<버전>-windows-x64.zip`을 받아, PATH에 있는 폴더 하나에 함께 넣으면 됩니다. Python은
+필요 없습니다. PowerShell에서는 아래 명령이 그 일을 하고 `%LOCALAPPDATA%\Programs\clippath`를
+사용자 PATH에 추가합니다.
 
 ```powershell
-uv tool install git+https://github.com/NaNIsaac/clippath
-uv tool update-shell  # 처음 한 번만, 그다음 터미널을 새로 여세요
+$d = "$env:LOCALAPPDATA\Programs\clippath"
+$url = (Invoke-RestMethod https://api.github.com/repos/NaNIsaac/clippath/releases/latest).assets[0].browser_download_url
+Invoke-WebRequest $url -OutFile "$env:TEMP\clippath.zip"
+Expand-Archive "$env:TEMP\clippath.zip" "$env:TEMP\clippath" -Force
+New-Item -ItemType Directory -Force $d | Out-Null
+Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$d", "User")
 ```
 
-uv가 없다면: `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
-(`pipx install git+https://github.com/NaNIsaac/clippath` + `pipx ensurepath`도 됩니다.)
+끝나면 터미널을 새로 여세요. 명령은 `clippath.exe`이고, `clippathw.exe`는 콘솔 창 없이 도는 같은
+감시 프로그램으로 `clippath start`가 로그인할 때 실행합니다. 두 파일은 같은 폴더에 두세요.
 
-pip를 쓸 경우:
-
-```powershell
-pip install git+https://github.com/NaNIsaac/clippath
-```
-
-pip가 `clippath.exe is installed in '...\Scripts' which is not on PATH` 경고를 띄우면
-그 폴더를 사용자 PATH에 한 번 추가하고 터미널을 새로 여세요:
-
-```powershell
-$d = python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$d", "User")
-```
-
-PATH를 건드리고 싶지 않다면 이렇게 실행해도 됩니다:
-
-```powershell
-python -m clippath copy
-```
+Python 버전(0.4)도 계속 쓸 수 있으며
+`uv tool install git+https://github.com/NaNIsaac/clippath@v0.4.0`으로 설치합니다.
 
 ## 사용법
 
@@ -95,15 +86,12 @@ clippath start --wsl    # 같은 기능, /mnt/c/... 경로로 복사
 `%LOCALAPPDATA%\clippath\`에 SHA-256 이름으로 저장해서, 같은 이미지는 한 번만 저장합니다.
 `clippath clean`은 이 폴더만 지웁니다. 어떤 데이터도 외부로 보내지 않습니다.
 
-## Rust 버전 (작업 중)
-
-Python 없이 `.exe` 하나로 돌아가도록 clippath를 Rust로 옮기고 있습니다. 첫 단계는 끝났습니다.
-`clippath copy [--wsl]`은 Python 명령과 똑같이 동작하며, 픽셀이 같은 스크린샷 파일을 재사용하는
-것도 같습니다. 백그라운드 감시, 트레이 아이콘, 나머지 명령은 아직 Python 패키지가 맡습니다.
+## 소스에서 빌드하기
 
 ```bash
-cargo build --release              # target\release\clippath.exe
-target\release\clippath.exe copy
+cargo build --release   # target\release\clippath.exe, clippathw.exe
+cargo test
 ```
 
-`main`에 푸시할 때마다 GitHub Actions에서도 exe를 빌드합니다(아티팩트 `clippath-windows-x64`).
+`main`에 푸시할 때마다 GitHub Actions에서도 두 exe를 빌드하고(아티팩트 `clippath-windows-x64`),
+`v*` 태그를 달면 릴리스로 올립니다.

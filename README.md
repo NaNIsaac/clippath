@@ -9,7 +9,7 @@
 Turns the image on your Windows clipboard into a PNG file and puts its path on the
 clipboard, so you can paste screenshots into terminal AI agents (Claude Code, Codex, ...)
 on Windows or WSL. The image stays on the clipboard too, so pasting into Paint or a
-messenger still gives you the image. Python stdlib only, no dependencies.
+messenger still gives you the image. A small native Windows program; no Python or runtime needed.
 
 ![Screenshot a pricing card, paste it into Claude Code, get the card back as HTML](assets/claude-code.gif)
 
@@ -17,35 +17,25 @@ messenger still gives you the image. Python stdlib only, no dependencies.
 
 ## Install
 
-Recommended (puts `clippath` on PATH for you):
+Download the two exes from the [latest release](https://github.com/NaNIsaac/clippath/releases/latest)
+(`clippath-<version>-windows-x64.zip`) and put them in one folder on your PATH. No Python needed.
+In PowerShell, this does it and adds `%LOCALAPPDATA%\Programs\clippath` to your user PATH:
 
 ```powershell
-uv tool install git+https://github.com/NaNIsaac/clippath
-uv tool update-shell  # first time only, then open a new terminal
+$d = "$env:LOCALAPPDATA\Programs\clippath"
+$url = (Invoke-RestMethod https://api.github.com/repos/NaNIsaac/clippath/releases/latest).assets[0].browser_download_url
+Invoke-WebRequest $url -OutFile "$env:TEMP\clippath.zip"
+Expand-Archive "$env:TEMP\clippath.zip" "$env:TEMP\clippath" -Force
+New-Item -ItemType Directory -Force $d | Out-Null
+Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$d", "User")
 ```
 
-No uv yet? `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`
-(`pipx install git+https://github.com/NaNIsaac/clippath` + `pipx ensurepath` also works.)
+Open a new terminal afterwards. `clippath.exe` is the command; `clippathw.exe` is the same watcher
+without a console window, which `clippath start` runs at login. Keep them together.
 
-With plain pip:
-
-```powershell
-pip install git+https://github.com/NaNIsaac/clippath
-```
-
-If pip warns `clippath.exe is installed in '...\Scripts' which is not on PATH`,
-add that folder to your user PATH once, then open a new terminal:
-
-```powershell
-$d = python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$d", "User")
-```
-
-No PATH change at all? This always works:
-
-```powershell
-python -m clippath copy
-```
+The Python version (0.4) still works and installs with
+`uv tool install git+https://github.com/NaNIsaac/clippath@v0.4.0`.
 
 ## Use
 
@@ -95,16 +85,12 @@ copy, after checking that its pixels match the clipboard image. Other images are
 in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the same image is saved once;
 `clippath clean` only touches this folder. Nothing is sent anywhere.
 
-## Rust version (in progress)
-
-clippath is being ported to Rust so that it runs as a single `.exe` without Python. The first
-part is done: `clippath copy [--wsl]` behaves like the Python command, including reusing a
-matching screenshot file. The background watcher, the tray icon and the other commands still come
-from the Python package.
+## Building from source
 
 ```bash
-cargo build --release              # target\release\clippath.exe
-target\release\clippath.exe copy
+cargo build --release   # target\release\clippath.exe and clippathw.exe
+cargo test
 ```
 
-Every push to `main` also builds the exe on GitHub Actions (artifact `clippath-windows-x64`).
+Every push to `main` also builds both exes on GitHub Actions (artifact `clippath-windows-x64`), and
+every `v*` tag publishes them as a release.
