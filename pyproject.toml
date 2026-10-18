@@ -16,3 +16,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["clippath"]
 package-data = { clippath = ["*.ico"] }
+
+[tool.ruff]
+line-length = 100
