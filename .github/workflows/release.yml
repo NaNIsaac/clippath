@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write  # create the release and upload the zip
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and test
+        run: |
+          cargo test
+          cargo build --release
+      - name: Zip
+        shell: pwsh
+        run: |
+          $name = "clippath-$env:GITHUB_REF_NAME-windows-x64"
+          New-Item -ItemType Directory $name | Out-Null
+          Copy-Item target/release/clippath.exe, target/release/clippathw.exe, README.md, LICENSE $name
+          Compress-Archive $name "$name.zip"
+          "ZIP=$name.zip" >> $env:GITHUB_ENV
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$env:GITHUB_REF_NAME" "$env:ZIP" --title "$env:GITHUB_REF_NAME" --notes "Unzip both exes into one folder, then run ``clippath start``. See the README for details."

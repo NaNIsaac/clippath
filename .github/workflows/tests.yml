@@ -18,7 +18,9 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: clippath-windows-x64
-          path: target/release/clippath.exe
+          path: |
+            target/release/clippath.exe
+            target/release/clippathw.exe
       - uses: astral-sh/setup-uv@v10.3.0
       - name: Python
         run: uv run --with pytest pytest -q test_clippath.py
