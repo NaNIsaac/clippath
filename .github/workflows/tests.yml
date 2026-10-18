@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Rust
+        run: |
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+          cargo build --release
+      - uses: actions/upload-artifact@v7
+        with:
+          name: clippath-windows-x64
+          path: target/release/clippath.exe
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Python
+        run: uv run --with pytest pytest -q test_clippath.py

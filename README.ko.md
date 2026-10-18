@@ -90,6 +90,20 @@ clippath start --wsl    # 같은 기능, /mnt/c/... 경로로 복사
 ## 파일은 어디에 저장되나요
 
 캡처 도구가 이미 파일을 저장했다면(캡처 도구, `Win+PrtScn` → `사진\Screenshots`)
-따로 복사본을 만들지 않고 그 파일의 경로를 복사합니다. 이때 파일의 픽셀이 클립보드 이미지와 같은지 먼저 확인합니다. 그 밖의 이미지는
+따로 복사본을 만들지 않고 그 파일의 경로를 복사합니다. 이때 파일의 픽셀이 클립보드 이미지와
+같은지 먼저 확인합니다. 그 밖의 이미지는
 `%LOCALAPPDATA%\clippath\`에 SHA-256 이름으로 저장해서, 같은 이미지는 한 번만 저장합니다.
 `clippath clean`은 이 폴더만 지웁니다. 어떤 데이터도 외부로 보내지 않습니다.
+
+## Rust 버전 (작업 중)
+
+Python 없이 `.exe` 하나로 돌아가도록 clippath를 Rust로 옮기고 있습니다. 첫 단계는 끝났습니다.
+`clippath copy [--wsl]`은 Python 명령과 똑같이 동작하며, 픽셀이 같은 스크린샷 파일을 재사용하는
+것도 같습니다. 백그라운드 감시, 트레이 아이콘, 나머지 명령은 아직 Python 패키지가 맡습니다.
+
+```bash
+cargo build --release              # target\release\clippath.exe
+target\release\clippath.exe copy
+```
+
+`main`에 푸시할 때마다 GitHub Actions에서도 exe를 빌드합니다(아티팩트 `clippath-windows-x64`).

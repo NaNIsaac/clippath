@@ -94,3 +94,17 @@ If your screenshot tool already saved the file (Snipping Tool, `Win+PrtScn` →
 copy, after checking that its pixels match the clipboard image. Other images are saved
 in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the same image is saved once;
 `clippath clean` only touches this folder. Nothing is sent anywhere.
+
+## Rust version (in progress)
+
+clippath is being ported to Rust so that it runs as a single `.exe` without Python. The first
+part is done: `clippath copy [--wsl]` behaves like the Python command, including reusing a
+matching screenshot file. The background watcher, the tray icon and the other commands still come
+from the Python package.
+
+```bash
+cargo build --release              # target\release\clippath.exe
+target\release\clippath.exe copy
+```
+
+Every push to `main` also builds the exe on GitHub Actions (artifact `clippath-windows-x64`).
