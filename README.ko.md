@@ -9,7 +9,7 @@
 Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로를 클립보드에 넣습니다.
 그래서 Windows나 WSL의 터미널 AI 에이전트(Claude Code, Codex 등)에 스크린샷을 바로
 붙여넣을 수 있습니다. 이미지도 클립보드에 그대로 남아 있어서, 그림판이나 메신저에
-붙여넣으면 이미지가 붙습니다. 작은 Windows 네이티브 프로그램이라 Python이나 런타임이 필요 없습니다.
+붙여넣으면 이미지가 붙습니다.
 
 ![가격 카드를 캡처해 Claude Code에 붙여넣으면 같은 카드를 HTML로 만들어 주는 장면](assets/claude-code.gif)
 
@@ -18,8 +18,8 @@ Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로�
 ## 설치
 
 [최신 릴리스](https://github.com/NaNIsaac/clippath/releases/latest)에서 exe 두 개가 든
-`clippath-<버전>-windows-x64.zip`을 받아, PATH에 있는 폴더 하나에 함께 넣으면 됩니다. Python은
-필요 없습니다. PowerShell에서는 아래 명령이 그 일을 하고 `%LOCALAPPDATA%\Programs\clippath`를
+`clippath-<버전>-windows-x64.zip`을 받아, PATH에 있는 폴더 하나에 함께 넣으면 됩니다.
+PowerShell에서는 아래 명령이 그 일을 하고 `%LOCALAPPDATA%\Programs\clippath`를
 사용자 PATH에 추가합니다.
 
 ```powershell
@@ -34,9 +34,6 @@ Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
 
 끝나면 터미널을 새로 여세요. 명령은 `clippath.exe`이고, `clippathw.exe`는 콘솔 창 없이 도는 같은
 감시 프로그램으로 `clippath start`가 로그인할 때 실행합니다. 두 파일은 같은 폴더에 두세요.
-
-Python 버전(0.4)도 계속 쓸 수 있으며
-`uv tool install git+https://github.com/NaNIsaac/clippath@v0.4.0`으로 설치합니다.
 
 ## 사용법
 
@@ -62,8 +59,7 @@ clippath start --wsl    # 같은 기능, /mnt/c/... 경로로 복사
 
 ![캡처한 뒤 PowerShell에서 Ctrl+V 하면 cp 명령에 따옴표로 감싼 파일 경로가 붙는 장면](assets/terminal.gif)
 
-실행 중에는 트레이에 clippath 아이콘이 보이고(클릭하면 폴더 열기, 종료), 작업관리자에는
-`clippath.exe`로 표시됩니다.
+실행 중에는 트레이에 clippath 아이콘이 보입니다(클릭하면 폴더 열기, 종료).
 
 ## 명령어
 
@@ -92,6 +88,3 @@ clippath start --wsl    # 같은 기능, /mnt/c/... 경로로 복사
 cargo build --release   # target\release\clippath.exe, clippathw.exe
 cargo test
 ```
-
-`main`에 푸시할 때마다 GitHub Actions에서도 두 exe를 빌드하고(아티팩트 `clippath-windows-x64`),
-`v*` 태그를 달면 릴리스로 올립니다.

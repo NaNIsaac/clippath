@@ -9,7 +9,7 @@
 Turns the image on your Windows clipboard into a PNG file and puts its path on the
 clipboard, so you can paste screenshots into terminal AI agents (Claude Code, Codex, ...)
 on Windows or WSL. The image stays on the clipboard too, so pasting into Paint or a
-messenger still gives you the image. A small native Windows program; no Python or runtime needed.
+messenger still gives you the image.
 
 ![Screenshot a pricing card, paste it into Claude Code, get the card back as HTML](assets/claude-code.gif)
 
@@ -18,7 +18,7 @@ messenger still gives you the image. A small native Windows program; no Python o
 ## Install
 
 Download the two exes from the [latest release](https://github.com/NaNIsaac/clippath/releases/latest)
-(`clippath-<version>-windows-x64.zip`) and put them in one folder on your PATH. No Python needed.
+(`clippath-<version>-windows-x64.zip`) and put them in one folder on your PATH.
 In PowerShell, this does it and adds `%LOCALAPPDATA%\Programs\clippath` to your user PATH:
 
 ```powershell
@@ -33,9 +33,6 @@ Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
 
 Open a new terminal afterwards. `clippath.exe` is the command; `clippathw.exe` is the same watcher
 without a console window, which `clippath start` runs at login. Keep them together.
-
-The Python version (0.4) still works and installs with
-`uv tool install git+https://github.com/NaNIsaac/clippath@v0.4.0`.
 
 ## Use
 
@@ -61,8 +58,7 @@ It is a plain path, so any command can use it:
 
 ![Screenshot, then Ctrl+V in PowerShell pastes the quoted file path into a cp command](assets/terminal.gif)
 
-While it runs, the clippath icon sits in the tray (click it: open folder, quit) and
-Task Manager lists it as `clippath.exe`.
+While it runs, the clippath icon sits in the tray (click it: open folder, quit).
 
 ## Commands
 
@@ -91,6 +87,3 @@ in `%LOCALAPPDATA%\clippath\`, named by SHA-256, so the same image is saved once
 cargo build --release   # target\release\clippath.exe and clippathw.exe
 cargo test
 ```
-
-Every push to `main` also builds both exes on GitHub Actions (artifact `clippath-windows-x64`), and
-every `v*` tag publishes them as a release.
