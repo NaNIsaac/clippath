@@ -19,6 +19,7 @@ messenger still gives you the image.
 
 In PowerShell (Windows PowerShell 5.1 or PowerShell 7):
 
+<!-- test windows -->
 ```powershell
 irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
 ```
@@ -41,6 +42,13 @@ folder on your PATH yourself.
 
 Open a new terminal afterwards. `clippath.exe` is the command; `clippathw.exe` is the same watcher
 without a console window, which `clippath start` runs at login. Keep them together.
+
+Check the install:
+
+<!-- test windows -->
+```powershell
+clippath --version
+```
 
 ## Use
 

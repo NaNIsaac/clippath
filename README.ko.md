@@ -19,6 +19,7 @@ Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로�
 
 PowerShell(Windows PowerShell 5.1 또는 PowerShell 7)에서:
 
+<!-- test windows -->
 ```powershell
 irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
 ```
@@ -41,6 +42,13 @@ zip을 받아 exe 두 개를 PATH의 한 폴더에 직접 넣어도 됩니다.
 
 끝나면 터미널을 새로 여세요. 명령은 `clippath.exe`이고, `clippathw.exe`는 콘솔 창 없이 도는 같은
 감시 프로그램으로 `clippath start`가 로그인할 때 실행합니다. 두 파일은 같은 폴더에 두세요.
+
+설치가 됐는지 확인하세요:
+
+<!-- test windows -->
+```powershell
+clippath --version
+```
 
 ## 사용법
 
