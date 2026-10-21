@@ -3,11 +3,11 @@
 # Puts clippath.exe and clippathw.exe in $env:CLIPPATH_INSTALL_DIR (default
 # %LOCALAPPDATA%\Programs\clippath) and adds that folder to the user PATH once.
 # Pin a release with $env:CLIPPATH_VERSION = 'v0.5.0'. Run it again to update.
-# Uninstall with $env:CLIPPATH_UNINSTALL = 1 (or .\install.ps1 -Uninstall); saved screenshots are kept.
+# Uninstall with $env:CLIPPATH_UNINSTALL = 1 (or true, yes; 0 and false leave it off) or .\install.ps1 -Uninstall; saved screenshots are kept.
 param(
     [string]$Version = $env:CLIPPATH_VERSION,
     [string]$InstallDir = $env:CLIPPATH_INSTALL_DIR,
-    [switch]$Uninstall = [bool]$env:CLIPPATH_UNINSTALL,
+    [switch]$Uninstall = ($env:CLIPPATH_UNINSTALL -match '^(1|true|yes)$'),
     # Offline install from a release zip; its checksum must be in "<zip>.sha256" next to it.
     [string]$ZipPath = $env:CLIPPATH_ZIP
 )
