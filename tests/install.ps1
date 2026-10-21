@@ -114,6 +114,7 @@ try {
         New-Item -ItemType Directory -Force "$data\bin" | Out-Null
         Set-Content "$data\bin\clippathw.exe" 'stale copy'
         Set-Content "$data\clip-test.png" 'user screenshot'
+        if (-not (Test-Path $runKey)) { New-Item $runKey | Out-Null }
         Set-ItemProperty $runKey -Name clippath -Value "`"$data\bin\clippathw.exe`""
         & $installer -Uninstall -InstallDir $dir *>&1 | Out-Null
         Assert (-not (Test-Path $dir)) 'install folder left behind'
