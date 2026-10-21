@@ -17,19 +17,27 @@ messenger still gives you the image.
 
 ## Install
 
-Download the two exes from the [latest release](https://github.com/NaNIsaac/clippath/releases/latest)
-(`clippath-<version>-windows-x64.zip`) and put them in one folder on your PATH.
-In PowerShell, this does it and adds `%LOCALAPPDATA%\Programs\clippath` to your user PATH:
+In PowerShell (Windows PowerShell 5.1 or PowerShell 7):
 
 ```powershell
-$d = "$env:LOCALAPPDATA\Programs\clippath"
-$url = (Invoke-RestMethod https://api.github.com/repos/NaNIsaac/clippath/releases/latest).assets[0].browser_download_url
-Invoke-WebRequest $url -OutFile "$env:TEMP\clippath.zip"
-Expand-Archive "$env:TEMP\clippath.zip" "$env:TEMP\clippath" -Force
-New-Item -ItemType Directory -Force $d | Out-Null
-Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$d", "User")
+irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
 ```
+
+[`install.ps1`](install.ps1) picks the `clippath-<version>-windows-x64.zip` asset by its exact name,
+checks its SHA-256 (the release's `.sha256` file, or GitHub's asset digest for older releases),
+puts `clippath.exe` and `clippathw.exe` in `%LOCALAPPDATA%\Programs\clippath` and adds that folder
+to your user PATH once. If the download or the checksum fails, an existing install is left as it was.
+
+- **Update**: run the same line again. A running background watcher is restarted on the new version.
+- **Pin a version**: `$env:CLIPPATH_VERSION = 'v0.5.0'` first.
+- **Other folder**: `$env:CLIPPATH_INSTALL_DIR = 'D:\Tools\clippath'` first.
+- **Uninstall**: `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1))) -Uninstall`.
+  This stops the watcher, removes it from login and from PATH, and deletes the exes. Saved screenshots in `%LOCALAPPDATA%\clippath` are kept;
+  `clippath clean` before uninstalling deletes them.
+
+You can [read the script](install.ps1) before running it, or download the zip from the
+[latest release](https://github.com/NaNIsaac/clippath/releases/latest) and put both exes in one
+folder on your PATH yourself.
 
 Open a new terminal afterwards. `clippath.exe` is the command; `clippathw.exe` is the same watcher
 without a console window, which `clippath start` runs at login. Keep them together.

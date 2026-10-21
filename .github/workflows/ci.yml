@@ -21,6 +21,18 @@ jobs:
           path: |
             target/release/clippath.exe
             target/release/clippathw.exe
+      - name: Installer (PowerShell 7 and Windows PowerShell 5.1)
+        shell: pwsh
+        run: |
+          # a zip laid out like the release one, from this build
+          $name = 'clippath-vtest-windows-x64'
+          New-Item -ItemType Directory $name | Out-Null
+          Copy-Item target/release/clippath.exe, target/release/clippathw.exe $name
+          Compress-Archive $name "$name.zip"
+          pwsh -NoProfile -File tests/install.ps1 -Zip "$name.zip"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          powershell -NoProfile -ExecutionPolicy Bypass -File tests/install.ps1 -Zip "$name.zip"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - uses: astral-sh/setup-uv@v10.3.0
       - name: Python
         run: uv run --with pytest pytest -q test_clippath.py

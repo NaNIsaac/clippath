@@ -23,8 +23,18 @@ jobs:
           New-Item -ItemType Directory $name | Out-Null
           Copy-Item target/release/clippath.exe, target/release/clippathw.exe, README.md, LICENSE $name
           Compress-Archive $name "$name.zip"
+          # the installer verifies the zip against this before touching an existing install
+          $hash = (Get-FileHash -Algorithm SHA256 "$name.zip").Hash.ToLowerInvariant()
+          Set-Content -Encoding ascii "$name.zip.sha256" "$hash  $name.zip"
           "ZIP=$name.zip" >> $env:GITHUB_ENV
+      - name: Test installer
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tests/install.ps1 -Zip "$env:ZIP"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          powershell -NoProfile -ExecutionPolicy Bypass -File tests/install.ps1 -Zip "$env:ZIP"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$env:GITHUB_REF_NAME" "$env:ZIP" --title "$env:GITHUB_REF_NAME" --notes "Unzip both exes into one folder, then run ``clippath start``. See the README for details."
+        run: gh release create "$env:GITHUB_REF_NAME" "$env:ZIP" "$env:ZIP.sha256" install.ps1 --title "$env:GITHUB_REF_NAME" --notes "Unzip both exes into one folder, then run ``clippath start``. See the README for details."

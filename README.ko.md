@@ -17,20 +17,27 @@ Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로�
 
 ## 설치
 
-[최신 릴리스](https://github.com/NaNIsaac/clippath/releases/latest)에서 exe 두 개가 든
-`clippath-<버전>-windows-x64.zip`을 받아, PATH에 있는 폴더 하나에 함께 넣으면 됩니다.
-PowerShell에서는 아래 명령이 그 일을 하고 `%LOCALAPPDATA%\Programs\clippath`를
-사용자 PATH에 추가합니다.
+PowerShell(Windows PowerShell 5.1 또는 PowerShell 7)에서:
 
 ```powershell
-$d = "$env:LOCALAPPDATA\Programs\clippath"
-$url = (Invoke-RestMethod https://api.github.com/repos/NaNIsaac/clippath/releases/latest).assets[0].browser_download_url
-Invoke-WebRequest $url -OutFile "$env:TEMP\clippath.zip"
-Expand-Archive "$env:TEMP\clippath.zip" "$env:TEMP\clippath" -Force
-New-Item -ItemType Directory -Force $d | Out-Null
-Copy-Item "$env:TEMP\clippath\*\clippath*.exe" $d -Force
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$d", "User")
+irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
 ```
+
+[`install.ps1`](install.ps1)은 `clippath-<버전>-windows-x64.zip` 파일을 정확한 이름으로 골라
+SHA-256을 확인한 뒤(릴리스의 `.sha256` 파일, 예전 릴리스는 GitHub의 asset digest),
+`clippath.exe`와 `clippathw.exe`를 `%LOCALAPPDATA%\Programs\clippath`에 넣고 그 폴더를 사용자 PATH에
+한 번만 추가합니다. 다운로드나 체크섬 확인이 실패하면 기존 설치는 그대로 둡니다.
+
+- **업데이트**: 같은 명령을 다시 실행하세요. 백그라운드 감시가 켜져 있으면 새 버전으로 다시 시작합니다.
+- **버전 고정**: 먼저 `$env:CLIPPATH_VERSION = 'v0.5.0'`.
+- **다른 폴더**: 먼저 `$env:CLIPPATH_INSTALL_DIR = 'D:\Tools\clippath'`.
+- **삭제**: `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1))) -Uninstall`.
+  감시를 멈추고 로그인 자동 실행과 PATH에서 빼고
+  exe를 지웁니다. `%LOCALAPPDATA%\clippath`에 저장된 스크린샷은 남깁니다. 지우려면 삭제 전에
+  `clippath clean`을 실행하세요.
+
+실행 전에 [스크립트를 읽어볼](install.ps1) 수 있고, [최신 릴리스](https://github.com/NaNIsaac/clippath/releases/latest)에서
+zip을 받아 exe 두 개를 PATH의 한 폴더에 직접 넣어도 됩니다.
 
 끝나면 터미널을 새로 여세요. 명령은 `clippath.exe`이고, `clippathw.exe`는 콘솔 창 없이 도는 같은
 감시 프로그램으로 `clippath start`가 로그인할 때 실행합니다. 두 파일은 같은 폴더에 두세요.
