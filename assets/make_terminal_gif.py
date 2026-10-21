@@ -1,7 +1,13 @@
 from PIL import Image, ImageDraw, ImageFont
 
 W, H, PAD, LH = 1240, 230, 24, 30
-BG, FG, DIM, ACCENT, PATH = (12, 12, 12), (204, 204, 204), (110, 110, 110), (97, 175, 239), (152, 195, 121)
+BG, FG, DIM, ACCENT, PATH = (
+    (12, 12, 12),
+    (204, 204, 204),
+    (110, 110, 110),
+    (97, 175, 239),
+    (152, 195, 121),
+)
 font = ImageFont.truetype(r"C:\Windows\Fonts\CascadiaMono.ttf", 18)
 badge_font = ImageFont.truetype(r"C:\Windows\Fonts\CascadiaMono.ttf", 20)
 PROMPT = r"PS C:\code\site> "
@@ -31,7 +37,9 @@ def frame(lines, ms, badge=None, dim=False, cursor=True):
         d = ImageDraw.Draw(im)
     if badge:
         bw = badge_font.getlength(badge) + 28
-        d.rounded_rectangle((W - bw - PAD, H - 50, W - PAD, H - 14), 8, fill=(45, 45, 45), outline=ACCENT)
+        d.rounded_rectangle(
+            (W - bw - PAD, H - 50, W - PAD, H - 14), 8, fill=(45, 45, 45), outline=ACCENT
+        )
         d.text((W - bw - PAD + 14, H - 44), badge, font=badge_font, fill=(255, 255, 255))
     frames.append(im)
     durations.append(ms)
@@ -60,4 +68,11 @@ frame(done + [row], 400)
 done += [row, [("bug.png", FG)]]
 frame(done + [p], 3000)
 
-frames[0].save("terminal.gif", save_all=True, append_images=frames[1:], duration=durations, loop=0, optimize=True)
+frames[0].save(
+    "terminal.gif",
+    save_all=True,
+    append_images=frames[1:],
+    duration=durations,
+    loop=0,
+    optimize=True,
+)

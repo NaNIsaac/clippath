@@ -10,7 +10,7 @@ from clippath import dib_to_png, find_screenshot, pixels, same_image, takes_path
 
 def idat(png):
     i = png.index(b"IDAT")
-    return zlib.decompress(png[i + 4: i + 4 + struct.unpack(">I", png[i - 4:i])[0]])
+    return zlib.decompress(png[i + 4 : i + 4 + struct.unpack(">I", png[i - 4 : i])[0]])
 
 
 def test_dib_bottom_up_24bpp():
@@ -32,7 +32,6 @@ def test_to_wsl():
     assert to_wsl(r"C:\Users\me\shot.png") == "/mnt/c/Users/me/shot.png"
 
 
-
 def test_takes_path():
     assert takes_path("CASCADIA_HOSTING_WINDOW_CLASS", "WindowsTerminal.exe")
     assert takes_path("ConsoleWindowClass", "someshell.exe")
@@ -45,7 +44,9 @@ def dib(rows):
     """Top-down 24bpp DIB from rows of (r, g, b) pixels."""
     width = len(rows[0])
     stride = (width * 24 + 31) // 32 * 4
-    body = b"".join(bytes(c for r, g, b in row for c in (b, g, r)).ljust(stride, b"\0") for row in rows)
+    body = b"".join(
+        bytes(c for r, g, b in row for c in (b, g, r)).ljust(stride, b"\0") for row in rows
+    )
     return struct.pack("<IiiHHIIiiII", 40, width, -len(rows), 1, 24, 0, 0, 0, 0, 0, 0) + body
 
 
@@ -54,14 +55,19 @@ def png_like_a_screenshot_tool(rows):
     raw = b""
     for row in rows:
         line = bytes(c for r, g, b in row for c in (r, g, b, 255))
-        raw += b"\1" + bytes((line[i] - (line[i - 4] if i >= 4 else 0)) & 0xFF for i in range(len(line)))
+        raw += b"\1" + bytes(
+            (line[i] - (line[i - 4] if i >= 4 else 0)) & 0xFF for i in range(len(line))
+        )
 
     def chunk(t, d):
         return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d))
 
-    return (b"\x89PNG\r\n\x1a\n"
-            + chunk(b"IHDR", struct.pack(">IIBBBBB", len(rows[0]), len(rows), 8, 6, 0, 0, 0))
-            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", len(rows[0]), len(rows), 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw, 9))
+        + chunk(b"IEND", b"")
+    )
 
 
 SHOT = [[(255, 0, 0), (0, 255, 0), (0, 0, 255)], [(9, 9, 9), (200, 100, 50), (255, 255, 255)]]

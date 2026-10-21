@@ -32,5 +32,8 @@ ico = [16, 24, 32, 48]  # embedded in clippath.py; 256 not needed for tray / Tas
 frames = {n: big.resize((n, n), Image.LANCZOS) for n in sizes}
 out = sys.argv[1]
 frames[256].save(out + "/logo.png")
-frames[48].save(out + "/../clippath/clippath.ico", sizes=[(n, n) for n in ico], append_images=[frames[n] for n in ico[:-1]])
-
+frames[48].save(
+    out + "/../clippath/clippath.ico",
+    sizes=[(n, n) for n in ico],
+    append_images=[frames[n] for n in ico[:-1]],
+)

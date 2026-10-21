@@ -24,3 +24,6 @@ line-length = 100
 [tool.ruff.lint.extend-per-file-ignores]
 "assets/make_icon.py" = ["F401", "I001"]
 "clippath/__init__.py" = ["SIM115", "SIM117"]
+
+[tool.ruff.lint]
+extend-select = ["I", "UP", "B"]
