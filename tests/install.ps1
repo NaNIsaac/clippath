@@ -109,6 +109,21 @@ try {
         Assert $threw 'install without checksum was not refused'
     }
 
+    Check 'CLIPPATH_UNINSTALL=0 or false still installs, 1 uninstalls' {
+        try {
+            foreach ($off in '0', 'false') {
+                $env:CLIPPATH_UNINSTALL = $off
+                Install $good
+                Assert ((Test-Path "$dir\clippath.exe") -and (Test-Path "$dir\clippathw.exe")) "CLIPPATH_UNINSTALL=$off uninstalled"
+            }
+            $env:CLIPPATH_UNINSTALL = '1'
+            & $installer -InstallDir $dir *>&1 | Out-Null
+            Assert (-not (Test-Path "$dir\clippath.exe")) 'CLIPPATH_UNINSTALL=1 did not uninstall'
+        } finally {
+            Remove-Item Env:CLIPPATH_UNINSTALL -ErrorAction SilentlyContinue
+        }
+        Install $good
+    }
     Check 'uninstall removes exes, PATH entries and autostart but keeps screenshots' {
         $data = Join-Path $env:LOCALAPPDATA 'clippath'
         New-Item -ItemType Directory -Force "$data\bin" | Out-Null
