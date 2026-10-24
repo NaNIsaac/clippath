@@ -65,6 +65,20 @@ try {
         Assert ((PathCount $dir) -eq 1) "PATH has $dir $(PathCount $dir) times"
     }
 
+    Check 'installs when the text is evaluated inside a dot-sourced block' {
+        # terminal wrappers run every typed line as `. $block`; InvocationName is '.' there too
+        $wrapped = Join-Path $root 'Programs\wrapped'
+        $env:CLIPPATH_ZIP = $good
+        $env:CLIPPATH_INSTALL_DIR = $wrapped
+        $env:CLIPPATH_TEST_INSTALLER = (Resolve-Path $installer).Path
+        try {
+            & (Get-Process -Id $PID).Path -NoProfile -Command '. { Invoke-Expression (Get-Content -Raw $env:CLIPPATH_TEST_INSTALLER) }' *>&1 | Out-Null
+        } finally {
+            Remove-Item Env:CLIPPATH_ZIP, Env:CLIPPATH_INSTALL_DIR, Env:CLIPPATH_TEST_INSTALLER -ErrorAction SilentlyContinue
+        }
+        Assert (Test-Path "$wrapped\clippath.exe") 'the installer did nothing'
+    }
+
     Check 'reinstall is idempotent and keeps other PATH entries' {
         Install $good
         [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ";$dir\", 'User')

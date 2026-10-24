@@ -185,6 +185,7 @@ function Install-Clippath {
     }
 }
 
-# dot-sourcing only defines the functions (for the tests)
-if ($MyInvocation.InvocationName -eq '.') { return }
+# dot-sourcing the file only defines the functions (for the tests). A line that a terminal wrapper
+# dot-sources and evaluates with iex also has InvocationName '.', but no script path.
+if ($MyInvocation.InvocationName -eq '.' -and $PSCommandPath) { return }
 if ($Uninstall) { Uninstall-Clippath } else { Install-Clippath }
