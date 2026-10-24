@@ -29,7 +29,7 @@ checks its SHA-256 (the release's `.sha256` file, or GitHub's asset digest for o
 puts `clippath.exe` and `clippathw.exe` in `%LOCALAPPDATA%\Programs\clippath` and adds that folder
 to your user PATH once. If the download or the checksum fails, an existing install is left as it was.
 
-- **Update**: run the same line again. A running background watcher is restarted on the new version.
+- **Update**: see [Update](#update).
 - **Pin a version**: `$env:CLIPPATH_VERSION = 'v0.5.0'` first.
 - **Other folder**: `$env:CLIPPATH_INSTALL_DIR = 'D:\Tools\clippath'` first.
 - **Uninstall**: `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1))) -Uninstall`.
@@ -48,6 +48,32 @@ Check the install:
 <!-- test windows -->
 ```powershell
 clippath --version
+```
+
+## Update
+
+Run the install line again. It downloads the latest release, checks its SHA-256, replaces both exes in
+`%LOCALAPPDATA%\Programs\clippath` and restarts a running background watcher on the new version. It
+prints what it did, for example `clippath: updated 0.5.0 -> 0.6.0`. If it prints nothing, it did not run.
+
+<!-- test windows -->
+```powershell
+irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+```
+
+Open a new terminal and check the version:
+
+<!-- test windows -->
+```powershell
+clippath --version
+```
+
+If it still shows 0.4.0, a copy from the old Python package comes first on PATH (the installer warns
+about it). Remove that copy, open a new terminal, and check which `clippath` runs first:
+
+```powershell
+uv tool uninstall clippath    # or: pip uninstall clippath
+Get-Command clippath -All     # the first line must end in Programs\clippath\clippath.exe
 ```
 
 ## Use

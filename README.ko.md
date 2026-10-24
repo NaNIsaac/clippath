@@ -29,7 +29,7 @@ SHA-256을 확인한 뒤(릴리스의 `.sha256` 파일, 예전 릴리스는 GitH
 `clippath.exe`와 `clippathw.exe`를 `%LOCALAPPDATA%\Programs\clippath`에 넣고 그 폴더를 사용자 PATH에
 한 번만 추가합니다. 다운로드나 체크섬 확인이 실패하면 기존 설치는 그대로 둡니다.
 
-- **업데이트**: 같은 명령을 다시 실행하세요. 백그라운드 감시가 켜져 있으면 새 버전으로 다시 시작합니다.
+- **업데이트**: [업데이트](#업데이트)를 보세요.
 - **버전 고정**: 먼저 `$env:CLIPPATH_VERSION = 'v0.5.0'`.
 - **다른 폴더**: 먼저 `$env:CLIPPATH_INSTALL_DIR = 'D:\Tools\clippath'`.
 - **삭제**: `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1))) -Uninstall`.
@@ -48,6 +48,32 @@ zip을 받아 exe 두 개를 PATH의 한 폴더에 직접 넣어도 됩니다.
 <!-- test windows -->
 ```powershell
 clippath --version
+```
+
+## 업데이트
+
+설치 명령을 다시 실행하세요. 최신 릴리스를 받아 SHA-256을 확인하고, `%LOCALAPPDATA%\Programs\clippath`의
+exe 두 개를 바꾸고, 백그라운드 감시가 켜져 있으면 새 버전으로 다시 시작합니다. 한 일을 출력합니다.
+예: `clippath: updated 0.5.0 -> 0.6.0`. 아무것도 출력되지 않았다면 실행되지 않은 것입니다.
+
+<!-- test windows -->
+```powershell
+irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+```
+
+터미널을 새로 열어 버전을 확인하세요:
+
+<!-- test windows -->
+```powershell
+clippath --version
+```
+
+그래도 0.4.0이 나오면 예전 Python 패키지의 복사본이 PATH에서 먼저 잡히는 것입니다(설치 스크립트가
+경고합니다). 그 복사본을 지우고, 터미널을 새로 열고, 어느 `clippath`가 먼저 실행되는지 확인하세요:
+
+```powershell
+uv tool uninstall clippath    # 또는: pip uninstall clippath
+Get-Command clippath -All     # 첫 줄이 Programs\clippath\clippath.exe로 끝나야 합니다
 ```
 
 ## 사용법
