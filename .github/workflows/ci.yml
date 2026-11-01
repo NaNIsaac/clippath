@@ -33,6 +33,6 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           powershell -NoProfile -ExecutionPolicy Bypass -File tests/install.ps1 -Zip "$name.zip"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - name: Python
         run: uv run --with pytest pytest -q test_clippath.py
