@@ -17,11 +17,11 @@ Windows 클립보드에 있는 이미지를 PNG 파일로 만들고 그 경로�
 
 ## 설치
 
-PowerShell(Windows PowerShell 5.1 또는 PowerShell 7)에서:
+cmd 또는 PowerShell에서:
 
 <!-- test windows -->
 ```powershell
-irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+powershell -ExecutionPolicy Bypass -c "irm -useb https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex"
 ```
 
 [`install.ps1`](install.ps1)은 `clippath-<버전>-windows-x64.zip` 파일을 정확한 이름으로 골라
@@ -58,7 +58,7 @@ exe 두 개를 바꾸고, 백그라운드 감시가 켜져 있으면 새 버전�
 
 <!-- test windows -->
 ```powershell
-irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+powershell -ExecutionPolicy Bypass -c "irm -useb https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex"
 ```
 
 터미널을 새로 열어 버전을 확인하세요:

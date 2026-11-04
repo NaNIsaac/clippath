@@ -17,11 +17,11 @@ messenger still gives you the image.
 
 ## Install
 
-In PowerShell (Windows PowerShell 5.1 or PowerShell 7):
+In cmd or PowerShell:
 
 <!-- test windows -->
 ```powershell
-irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+powershell -ExecutionPolicy Bypass -c "irm -useb https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex"
 ```
 
 [`install.ps1`](install.ps1) picks the `clippath-<version>-windows-x64.zip` asset by its exact name,
@@ -58,7 +58,7 @@ prints what it did, for example `clippath: updated 0.5.0 -> 0.6.0`. If it prints
 
 <!-- test windows -->
 ```powershell
-irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+powershell -ExecutionPolicy Bypass -c "irm -useb https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex"
 ```
 
 Open a new terminal and check the version:

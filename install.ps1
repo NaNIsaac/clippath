@@ -1,5 +1,5 @@
 # clippath installer for Windows (Windows PowerShell 5.1 and PowerShell 7):
-#   irm https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex
+#   powershell -ExecutionPolicy Bypass -c "irm -useb https://raw.githubusercontent.com/NaNIsaac/clippath/main/install.ps1 | iex"
 # Puts clippath.exe and clippathw.exe in $env:CLIPPATH_INSTALL_DIR (default
 # %LOCALAPPDATA%\Programs\clippath) and adds that folder to the user PATH once.
 # Pin a release with $env:CLIPPATH_VERSION = 'v0.5.0'. Run it again to update.
