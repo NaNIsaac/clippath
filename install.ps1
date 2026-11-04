@@ -11,7 +11,6 @@ param(
     # Offline install from a release zip; its checksum must be in "<zip>.sha256" next to it.
     [string]$ZipPath = $env:CLIPPATH_ZIP
 )
-$ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 $repo = 'NaNIsaac/clippath'
@@ -188,4 +187,9 @@ function Install-Clippath {
 # dot-sourcing the file only defines the functions (for the tests). A line that a terminal wrapper
 # dot-sources and evaluates with iex also has InvocationName '.', but no script path.
 if ($MyInvocation.InvocationName -eq '.' -and $PSCommandPath) { return }
-if ($Uninstall) { Uninstall-Clippath } else { Install-Clippath }
+# irm | iex runs this in your shell's scope. 'Stop' is set in a script block so it does not stay
+# in your shell; the functions called from it still see it.
+& {
+    $ErrorActionPreference = 'Stop'
+    if ($Uninstall) { Uninstall-Clippath } else { Install-Clippath }
+}
