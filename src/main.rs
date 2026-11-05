@@ -56,8 +56,11 @@ fn run(args: &[&str]) -> Result<(), (u8, String)> {
         ["start", rest @ ..] => println!("{}", clippath::service::start(paths(rest)?).map_err(failed)?),
         #[cfg(windows)]
         ["stop"] => {
-            clippath::service::stop();
-            println!("Stopped. Autostart off.");
+            let report = clippath::service::stop();
+            if !report.all_stopped() {
+                return Err((1, format!("{report}\nAutostart off.")));
+            }
+            println!("{report}\nAutostart off.");
         }
         #[cfg(windows)]
         ["status"] => println!("{}", clippath::service::status().map_err(failed)?),
