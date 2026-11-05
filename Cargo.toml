@@ -1,6 +1,6 @@
 [package]
 name = "clippath"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 description = "Screenshot once. Paste where you need it. Clipboard image -> PNG -> Windows/WSL path."
 license = "MIT"
