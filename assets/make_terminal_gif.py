@@ -38,9 +38,14 @@ def frame(lines, ms, badge=None, dim=False, cursor=True):
     if badge:
         bw = badge_font.getlength(badge) + 28
         d.rounded_rectangle(
-            (W - bw - PAD, H - 50, W - PAD, H - 14), 8, fill=(45, 45, 45), outline=ACCENT
+            (W - bw - PAD, H - 50, W - PAD, H - 14),
+            8,
+            fill=(45, 45, 45),
+            outline=ACCENT,
         )
-        d.text((W - bw - PAD + 14, H - 44), badge, font=badge_font, fill=(255, 255, 255))
+        d.text(
+            (W - bw - PAD + 14, H - 44), badge, font=badge_font, fill=(255, 255, 255)
+        )
     frames.append(im)
     durations.append(ms)
 
